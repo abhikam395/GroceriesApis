@@ -15,8 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   };
   Offer.init({
     name: DataTypes.STRING,
-    imageurl: DataTypes.STRING,
-    productId: DataTypes.INTEGER
+    imageUrl: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Offer',
