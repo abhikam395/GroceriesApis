@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var Product = require('./../models').Product;
 var Category = require('./../models').Category;
+var Image = require('./../models').Image;
 
 //create product
 router.post('/products', async function(req, res, next) {
@@ -12,16 +13,28 @@ router.post('/products', async function(req, res, next) {
       description: description,
       price: price,
       categoryId: categoryId,
-    })
-    res.status(200).json({
-      status: 'ok',
-      user: {
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        price: price,
-      }
-    })
+    });
+    let object = {
+      url: 'https://ssl-product-images.www8-hp.com/digmedialib/prodimg/lowres/c06539618.png',
+      productId: product.id
+    };
+
+    let image = await Image.bulkCreate([object, object, object, object]);
+
+    if(image){
+      res.status(200).json({
+        status: 'ok',
+        user: {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: price,
+        }
+      })
+    }
+    else
+      throw new Error('Unable to create product');
+      
   } catch (error) {
     let {errno} = error.parent;
     if(errno == 1452){
@@ -45,8 +58,10 @@ router.get('/products', async function(req, res, next) {
     let products = await Product.findAll({
       attributes: ['id', 'name', 'description', 'price'],
       include: {
-        model: Category,
-        as: 'category',
+        limit: 1,
+        model: Image,
+        attributes: ['id', 'url'],
+        as: 'images',
       }
     });
     res.status(200).json({
@@ -66,8 +81,14 @@ router.get('/products/:id', async function(req, res, next) {
   let {id} = req.params;
   try {
       let product = await Product.findOne({
+        attributes: ['id', 'name', 'description', 'price'],
         where: {
           id: id
+        },
+        include: {
+          attributes: ['id', 'url'],
+          model: Image,
+          as: 'images',
         }
       })
       res.status(200).json({
